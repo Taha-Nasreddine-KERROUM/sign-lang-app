@@ -6,6 +6,7 @@ import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity(){
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -14,6 +15,16 @@ class MainActivity : AppCompatActivity(){
             val intent = Intent(this, CameraActivity::class.java)
             startActivity(intent)
         })
+        val searchBtn:Button = findViewById(R.id.SwitchToSearch)
+        searchBtn.setOnClickListener(
+            {
+                val intent = Intent(this, SearchActivity::class.java)
+                startActivity(intent)
+            }
+        )
+
     }
+
+
 
 }
