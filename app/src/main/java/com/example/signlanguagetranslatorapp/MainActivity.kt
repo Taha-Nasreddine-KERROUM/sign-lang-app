@@ -11,17 +11,15 @@ class MainActivity : AppCompatActivity(){
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val startBtn:Button = findViewById(R.id.startBtn)
-        startBtn.setOnClickListener({
+        startBtn.setOnClickListener {
             val intent = Intent(this, CameraActivity::class.java)
             startActivity(intent)
-        })
+        }
         val searchBtn:Button = findViewById(R.id.SwitchToSearch)
-        searchBtn.setOnClickListener(
-            {
-                val intent = Intent(this, SearchActivity::class.java)
-                startActivity(intent)
-            }
-        )
+        searchBtn.setOnClickListener {
+            val intent = Intent(this, SearchActivity::class.java)
+            startActivity(intent)
+        }
 
     }
 

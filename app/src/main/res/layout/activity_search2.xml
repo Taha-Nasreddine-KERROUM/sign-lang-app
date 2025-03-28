@@ -5,34 +5,16 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SearchActivity">
+    tools:context=".SearchActivity"
+    tools:ignore="ExtraText">
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_begin="0dp" />
-
-
-    <EditText
-        android:id="@+id/textEntred"
-        android:layout_width="365dp"
-        android:layout_height="52dp"
-        android:ems="10"
-        android:inputType="text"
-        android:text="Enter the text"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.955" />
 
     <ImageButton
         android:id="@+id/analyzeButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="TODO"
+        android:layout_width="82dp"
+        android:layout_height="78dp"
+        android:contentDescription="@string/start"
+        android:labelFor="@id/analyzeButton"
         app:layout_constraintBottom_toBottomOf="@+id/textEntred"
         app:layout_constraintEnd_toEndOf="@+id/textEntred"
         app:layout_constraintHorizontal_bias="1.0"
@@ -42,36 +24,44 @@
         app:srcCompat="@android:drawable/ic_menu_send" />
 
 
-    <TextView
-        android:id="@+id/resultText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/analyzeButton"
-        android:layout_marginBottom="248dp"
-        android:padding="8dp"
-        android:text=""
-        app:layout_constraintBottom_toTopOf="@+id/textEntred"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+    <EditText
 
-    <HorizontalScrollView
-        android:id="@+id/horizontalScrollView"
-        android:layout_width="407dp"
-        android:layout_height="37dp"
-        android:layout_below="@id/resultText"
-        app:layout_constraintBottom_toTopOf="@+id/resultText"
+        android:id="@+id/textEntred"
+        android:layout_width="367dp"
+        android:layout_height="77dp"
+        android:autofillHints="name"
+        android:hint="@string/enter_text_to_translate"
+        android:inputType="text"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/resultText"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/resultText"
+        app:layout_constraintTop_toBottomOf="@+id/resultText"
+        app:layout_constraintVertical_bias="0.496" />
+
+    <LinearLayout
+        android:id="@+id/signImagesContainer"
+        android:layout_width="365dp"
+        android:layout_height="458dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.542"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
-            android:id="@+id/signImagesContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="8dp" />
+    </LinearLayout>
 
-    </HorizontalScrollView>
+    <TextView
+        android:id="@+id/resultText"
+        android:layout_width="362dp"
+        android:layout_height="64dp"
 
+        android:layout_marginTop="48dp"
+        android:text="@string/textview"
+        app:layout_constraintEnd_toEndOf="@+id/signImagesContainer"
+        app:layout_constraintHorizontal_bias="0.529"
+        app:layout_constraintStart_toStartOf="@+id/signImagesContainer"
+        app:layout_constraintTop_toBottomOf="@+id/signImagesContainer" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
