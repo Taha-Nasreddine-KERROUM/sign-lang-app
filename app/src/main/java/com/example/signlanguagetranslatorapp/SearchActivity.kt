@@ -36,6 +36,7 @@ class SearchActivity : AppCompatActivity() {
         analyzeButton = findViewById(R.id.analyzeButton)
         signImagesContainer = findViewById(R.id.signImagesContainer)
 
+
         // button clicked
         analyzeButton.setOnClickListener {
             val inputText = userTxt.text.toString().trim()
