@@ -20,20 +20,10 @@
         android:labelFor="@id/textEntred"
         android:text="@string/enter_text_here"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/signImagesContainer"
-        app:layout_constraintStart_toStartOf="@+id/signImagesContainer" />
+        app:layout_constraintEnd_toEndOf="@+id/scrollView2"
+        app:layout_constraintStart_toStartOf="@+id/scrollView2" />
 
-    <LinearLayout
-        android:id="@+id/signImagesContainer"
-        android:layout_width="361dp"
-        android:layout_height="534dp"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/textEntred"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
 
-    </LinearLayout>
 
     <ImageButton
         android:id="@+id/analyzeButton"
@@ -49,6 +39,33 @@
         app:layout_constraintTop_toTopOf="@+id/textEntred"
         app:layout_constraintVertical_bias="1.0"
         app:srcCompat="@android:drawable/ic_menu_send" />
+
+    <ScrollView
+        android:id="@+id/scrollView2"
+        android:layout_width="413dp"
+        android:layout_height="357dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/textEntred"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/signImagesContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp" />
+
+        </HorizontalScrollView>
+    </ScrollView>
+
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

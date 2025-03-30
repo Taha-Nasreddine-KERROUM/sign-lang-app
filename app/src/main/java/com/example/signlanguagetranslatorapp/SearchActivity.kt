@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -57,6 +58,7 @@ class SearchActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private fun displaySignLanguageImages(text: String) {
         try {
+            signImagesContainer.orientation = LinearLayout.HORIZONTAL
             // Process each character in the input text
             for (char in text.lowercase()) {
                 if (char in 'a'..'z') {
@@ -103,6 +105,7 @@ class SearchActivity : AppCompatActivity() {
                     signImagesContainer.addView(spacer)
                 }
             }
+            findViewById<ScrollView>(R.id.scrollView2).scrollTo(0, 0)
         } catch (e: Exception) {
             Toast.makeText(this, "Error displaying images: ${e.message}", Toast.LENGTH_SHORT).show()
         }
