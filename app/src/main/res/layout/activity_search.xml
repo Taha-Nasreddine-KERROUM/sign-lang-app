@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SearchActivity"
+    tools:ignore="ExtraText">
+
+
+    <EditText
+
+        android:id="@+id/textEntred"
+        android:layout_width="270dp"
+        android:layout_height="75dp"
+        android:autofillHints="name"
+        android:hint="@string/enter_text_to_translate"
+        android:inputType="text"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/signImagesContainer"
+        app:layout_constraintTop_toBottomOf="@+id/signImagesContainer" />
+
+    <LinearLayout
+        android:id="@+id/signImagesContainer"
+        android:layout_width="361dp"
+        android:layout_height="612dp"
+        android:layout_marginTop="56dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/analyzeButton"
+        android:layout_width="74dp"
+        android:layout_height="77dp"
+        android:contentDescription="@string/send"
+        app:layout_constraintBottom_toBottomOf="@+id/textEntred"
+        app:layout_constraintEnd_toEndOf="@+id/signImagesContainer"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/textEntred"
+        app:layout_constraintTop_toTopOf="@+id/textEntred"
+        app:layout_constraintVertical_bias="1.0"
+        app:srcCompat="@android:drawable/ic_menu_send"
+        app:tint="@color/black" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -19,29 +19,26 @@ class SearchActivity : AppCompatActivity() {
 
     private lateinit var userTxt: EditText
     private lateinit var analyzeButton: ImageButton
-    private lateinit var resultText: TextView
     private lateinit var signImagesContainer: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_search2)
+        setContentView(R.layout.activity_search)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // Initialization of components
+        // Initialization
         userTxt = findViewById(R.id.textEntred)
         analyzeButton = findViewById(R.id.analyzeButton)
-        resultText = findViewById(R.id.resultText)
         signImagesContainer = findViewById(R.id.signImagesContainer)
 
-        // Set button click listener
+        // button clicked
         analyzeButton.setOnClickListener {
             val inputText = userTxt.text.toString().trim()
-
             if (inputText.isEmpty()) {
                 Toast.makeText(this, "Please enter some text", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -50,7 +47,7 @@ class SearchActivity : AppCompatActivity() {
             // Clear previous results
             signImagesContainer.removeAllViews()
 
-            // Process and display images
+            // call of display images function
             displaySignLanguageImages(inputText)
         }
     }
@@ -63,7 +60,7 @@ class SearchActivity : AppCompatActivity() {
             for (char in text.lowercase()) {
                 if (char in 'a'..'z') {
                     try {
-                        // Try to open image from assets
+                        // open image from assets
                         val inputStream = assets.open("letters/$char.png")
                         val drawable = android.graphics.drawable.Drawable.createFromStream(inputStream, null)
 
@@ -72,12 +69,12 @@ class SearchActivity : AppCompatActivity() {
                             val imageView = ImageView(this)
                             imageView.setImageDrawable(drawable)
 
-                            // Set layout parameters
+                            // layout parameters
                             val params = LinearLayout.LayoutParams(
                                 300, // width
                                 300  // height
                             )
-                            params.marginEnd = 16 // margin between images
+                            params.marginEnd = 16 // space between images
                             imageView.layoutParams = params
 
                             // Add character label

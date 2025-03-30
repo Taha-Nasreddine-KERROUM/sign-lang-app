@@ -1,4 +1,13 @@
 <resources>
     <string name="app_name">SignLanguageTranslatorApp</string>
     <string name="start">Start</string>
+    <string name="enter_text_to_translate">Enter text to translate</string>
+    <string name="textview">TextView</string>
+    <string name="enter_text_to_convert">Enter text to convert</string>
+    <string name="convert_button">Convert button</string>
+    <string name="search">Search</string>
+    <string name="enter_text_here">enter text here …</string>
+    <string name="Enter_text_here">Enter text here</string>
+    <string name="todo">TODO</string>
+    <string name="send">send</string>
 </resources>
