@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">SignLanguageTranslatorApp</string>
-    <string name="start">Start</string>
-    <string name="textview">TextView</string>
-    <string name="search">Search</string>
-    <string name="send">send</string>
-    <string name="enter_text_here">"  Enter text here …"</string>
-    <string name="scroll_to_see_the_rest">Scroll to see the rest</string>
-</resources>
