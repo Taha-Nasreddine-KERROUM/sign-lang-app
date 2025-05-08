@@ -26,6 +26,13 @@ android {
             )
         }
     }
+
+    packaging{
+        resources{
+            excludes += "/**/*.onnx"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -49,4 +56,6 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation("com.google.mediapipe:tasks-vision:0.10.21")
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.21.1")
 }
