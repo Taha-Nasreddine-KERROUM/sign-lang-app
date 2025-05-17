@@ -6,4 +6,10 @@
     <string name="send">send</string>
     <string name="enter_text_here">"  Enter text here …"</string>
     <string name="scroll_to_see_the_rest">Scroll to see the rest</string>
+    <string name="sign_language_will_appear_here">Sign language will appear here…</string>
+    <string name="detected_sign">Detected Sign:</string>
+    <string name="rest">rest</string>
+    <string name="back">Back</string>
+
+
 </resources>
