@@ -2,6 +2,8 @@ package com.example.signlanguagetranslatorapp
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -21,6 +23,7 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var userTxt: TextInputEditText
     private lateinit var analyzeButton: MaterialButton
     private lateinit var signImagesContainer: LinearLayout
+    private lateinit var gestureDetector: GestureDetector
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +36,7 @@ class SearchActivity : AppCompatActivity() {
         }
 
         // Initialization
+        gestureDetector=GestureDetector(this,SwipeGestureListener())
         userTxt = findViewById(R.id.textEntred)
         analyzeButton = findViewById(R.id.analyzeButton)
         signImagesContainer = findViewById(R.id.signImagesContainer)
@@ -108,6 +112,33 @@ class SearchActivity : AppCompatActivity() {
             findViewById<ScrollView>(R.id.scrollView2).scrollTo(0, 0)
         } catch (e: Exception) {
             Toast.makeText(this, "Error displaying images: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        gestureDetector.onTouchEvent(event)
+        return super.onTouchEvent(event)
+    }
+    inner class SwipeGestureListener : GestureDetector.SimpleOnGestureListener(){
+        private val sWIPETHRESHOLD=100
+        private val sWIPEVELOCITYTHRESHOLD=100
+
+
+        override fun onFling(
+            e1: MotionEvent?,
+            e2: MotionEvent,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
+            if(e1 !=null){
+                val diffx=e1.x - e2.x
+                if(kotlin.math.abs(diffx)>sWIPETHRESHOLD && kotlin.math.abs(velocityX)> sWIPEVELOCITYTHRESHOLD){
+                    if(diffx<0){
+                        finish()
+                    }
+                    return true
+                }
+            }
+            return false
         }
     }
 

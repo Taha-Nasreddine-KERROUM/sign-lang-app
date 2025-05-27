@@ -1,8 +1,12 @@
 package com.example.signlanguagetranslatorapp
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +27,7 @@ class CameraActivity : AppCompatActivity(), HandTrackingAnalyzer.PredictionListe
     private lateinit var handTrackingAnalyzer: HandTrackingAnalyzer
     private lateinit var cameraExecutor: ExecutorService
     private var detectedText = StringBuilder()
+    private lateinit var gestureDetector: GestureDetector
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +36,7 @@ class CameraActivity : AppCompatActivity(), HandTrackingAnalyzer.PredictionListe
         // Initialize views
         previewView = findViewById(R.id.previewView)
         resultTextView = findViewById(R.id.resultTextView)
+        gestureDetector = GestureDetector(this, SwipeGestureListener())
 
         // Set up clear button
         val clearButton = findViewById<ImageButton>(R.id.clearButton)
@@ -48,6 +54,38 @@ class CameraActivity : AppCompatActivity(), HandTrackingAnalyzer.PredictionListe
 
         // Request camera permission
         requestCameraPermission()
+    }
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        gestureDetector.onTouchEvent(event)
+        return super.onTouchEvent(event)
+    }
+
+    inner class SwipeGestureListener : GestureDetector.SimpleOnGestureListener() {
+        private val sWIPETHRESHOLD = 100
+        private val sWIPEVELOCITYTHRESHOLD = 100
+        override fun onFling(
+            e1: MotionEvent?,
+            e2: MotionEvent,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
+            if (e1 != null) {
+                val diffx = e1.x - e2.x
+                if (kotlin.math.abs(diffx) > sWIPETHRESHOLD && kotlin.math.abs(velocityX) > sWIPEVELOCITYTHRESHOLD) {
+                    if (diffx > 0) {
+                        val intent = Intent(this@CameraActivity, SearchActivity::class.java)
+                        startActivity(intent)
+                    }
+                    else{
+                        Log.d("SwipeGesture","Swiped Left")
+                        finish()
+                    }
+                    return true
+                }
+            }
+            return false
+
+        }
     }
 
     private fun requestCameraPermission() {
