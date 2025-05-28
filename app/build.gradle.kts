@@ -51,4 +51,8 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("org.json:json:20210307")
+
 }
