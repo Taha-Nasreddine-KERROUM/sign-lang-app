@@ -1,15 +1,40 @@
 <resources>
-    <string name="app_name">SignLanguageTranslatorApp</string>
-    <string name="start">Start</string>
-    <string name="textview">TextView</string>
-    <string name="search">Search</string>
-    <string name="send">send</string>
-    <string name="enter_text_here">"  Enter text here …"</string>
-    <string name="scroll_to_see_the_rest">Scroll to see the rest</string>
-    <string name="sign_language_will_appear_here">Sign language will appear here…</string>
-    <string name="detected_sign">Detected Sign:</string>
-    <string name="rest">rest</string>
+    <string name="app_name">ASL Translator</string>
     <string name="back">Back</string>
+    <string name="open_search">Text to sign (or swipe left)</string>
+    <string name="flip_camera">Switch camera</string>
 
+    <!-- Home -->
+    <string name="home_badge">ASL fingerspelling</string>
+    <string name="home_title">Sign language,\ntranslated.</string>
+    <string name="home_subtitle">Point your camera at a hand sign, or type a message and see how to sign it.</string>
+    <string name="home_sign_to_text">Sign to Text</string>
+    <string name="home_sign_to_text_desc">Use the camera to read ASL letters live</string>
+    <string name="home_text_to_sign">Text to Sign</string>
+    <string name="home_text_to_sign_desc">Type anything and see every letter signed</string>
+    <string name="home_tip">Tip: hold each letter steady for about half a second.</string>
 
+    <!-- Camera -->
+    <string name="status_loading">Loading model…</string>
+    <string name="status_hand">Hand detected</string>
+    <string name="status_no_hand">No hand</string>
+    <string name="caption_show_hand">Show a hand sign</string>
+    <string name="caption_hold">Hold steady…</string>
+    <string name="caption_unsure">Not sure yet</string>
+    <string name="caption_added">Added ✓</string>
+    <string name="confidence_fmt">%1$d%% match</string>
+    <string name="output_hint">Your text will appear here</string>
+    <string name="space">Space</string>
+    <string name="backspace">Delete last letter</string>
+    <string name="clear">Clear all</string>
+    <string name="model_load_failed">Could not load the recognition model</string>
+    <string name="camera_permission_needed">Camera permission is required to translate signs</string>
+    <string name="camera_error">Camera error: %1$s</string>
+
+    <!-- Search -->
+    <string name="search_title">Text to Sign</string>
+    <string name="search_hint">Type a word or sentence</string>
+    <string name="search_helper">Letters A–Z are supported</string>
+    <string name="search_empty_title">Nothing signed yet</string>
+    <string name="search_empty_desc">Start typing and the signs appear instantly.</string>
 </resources>
