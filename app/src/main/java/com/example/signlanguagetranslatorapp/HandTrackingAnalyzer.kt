@@ -1,160 +1,79 @@
 package com.example.signlanguagetranslatorapp
 
-
 import android.content.Context
 import android.graphics.Bitmap
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.tasks.core.BaseOptions
-import com.google.mediapipe.tasks.vision.core.ImageProcessingOptions
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarker
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.common.FileUtil
-import kotlin.math.min
+import java.io.Closeable
 
-class HandTrackingAnalyzer(private val context: Context) {
+/**
+ * MediaPipe hand landmarks  ->  [HandFeatures] (42 numbers)  ->  [RandomForestModel]  ->  letter.
+ *
+ * This is the same pipeline as "interface classifier.py" in the Python prototype.
+ * Not thread-safe: call [process] from a single thread (the camera analysis thread).
+ */
+class HandTrackingAnalyzer private constructor(
+    private val model: RandomForestModel,
+    private val handLandmarker: HandLandmarker,
+) : Closeable {
 
-    private var tflite: Interpreter? = null
-    private var handLandmarker: HandLandmarker? = null
-    private val labelsMap = mapOf(
-        0 to "A", 1 to "B", 2 to "C", 3 to "D", 4 to "E", 5 to "F", 6 to "G", 7 to "H", 8 to "I",
-        9 to "J", 10 to "K", 11 to "L", 12 to "M", 13 to "N", 14 to "nothing", 15 to "O", 16 to "P", 17 to "Q",
-        18 to "R", 19 to "S", 20 to "space", 21 to "T", 22 to "U", 23 to "V", 24 to "W", 25 to "X", 26 to "Y", 27 to "Z"
-    )
+    data class Prediction(val letter: Char, val confidence: Float)
 
-    // Interface for prediction results
-    interface PredictionListener {
-        fun onPredictionResult(letter: String)
+    /**
+     * @param bitmap upright (already rotated) ARGB_8888 frame, NOT mirrored - exactly like a raw webcam frame.
+     * @param timestampMs must be strictly increasing between calls.
+     * @return the predicted letter, or null when no hand is visible.
+     */
+    fun process(bitmap: Bitmap, timestampMs: Long): Prediction? {
+        val mpImage = BitmapImageBuilder(bitmap).build()
+        val result = handLandmarker.detectForVideo(mpImage, timestampMs)
+        val hand = result.landmarks().firstOrNull() ?: return null
+        if (hand.size != HandFeatures.LANDMARK_COUNT) return null
+
+        val lx = FloatArray(HandFeatures.LANDMARK_COUNT) { hand[it].x() }
+        val ly = FloatArray(HandFeatures.LANDMARK_COUNT) { hand[it].y() }
+        val features = HandFeatures.build(lx, ly, bitmap.width, bitmap.height)
+
+        val prediction = model.predict(features)
+        if (prediction.label !in 0..25) return null
+        return Prediction('A' + prediction.label, prediction.confidence)
     }
 
-    private var predictionListener: PredictionListener? = null
-
-    fun setPredictionListener(listener: PredictionListener) {
-        predictionListener = listener
+    override fun close() {
+        handLandmarker.close()
     }
 
-    init {
-        try {
-            // Initialize TFLite interpreter
-            val tfliteModel = FileUtil.loadMappedFile(context, "model.tflite")
-            val options = Interpreter.Options()
-            options.setNumThreads(4)
-            tflite = Interpreter(tfliteModel, options)
+    companion object {
+        private const val MODEL_ASSET = "rf_model.bin"
+        private const val LANDMARKER_ASSET = "hand_landmarker.task"
 
-            // Initialize MediaPipe HandLandmarker
-            setupHandLandmarker()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun setupHandLandmarker() {
-        val baseOptions = BaseOptions.builder()
-            .setModelAssetPath("hand_landmarker.task")
-            .build()
-
-        val options = HandLandmarker.HandLandmarkerOptions.builder()
-            .setBaseOptions(baseOptions)
-            .setNumHands(2)  // Detect up to 2 hands
-            .setMinHandDetectionConfidence(0.5f)
-            .setRunningMode(RunningMode.IMAGE)
-            .build()
-
-        try {
-            handLandmarker = HandLandmarker.createFromOptions(context, options)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    fun processImage(bitmap: Bitmap) {
-        // Convert the bitmap to MediaPipe image format
-        val imageProcessingOptions = ImageProcessingOptions.builder()
-            .setRotationDegrees(0)
-            .build()
-
-        // Create MPImage from bitmap
-        val image = BitmapImageBuilder(bitmap).build()
-
-
-
-        // Process the image with MediaPipe HandLandmarker
-        val result = handLandmarker?.detect(image, imageProcessingOptions) ?: return
-
-        // Extract landmarks and make prediction
-        if (result.landmarks().isNotEmpty()) {
-            val handLandmarks = result.landmarks()
-
-            // Convert landmarks to the format expected by the model
-            val inputFeatures = prepareInputFeatures(handLandmarks)
-
-            // Make prediction using TFLite model
-            val outputProbabilities = Array(1) { FloatArray(28) } // 28 classes (A-Z + space + nothing)
-            tflite?.run(inputFeatures, outputProbabilities)
-
-            // Get the most probable class
-            val maxIndex = outputProbabilities[0].indices.maxByOrNull { outputProbabilities[0][it] } ?: -1
-            if (maxIndex >= 0) {
-                val predictedLetter = labelsMap[maxIndex] ?: "unknown"
-                predictionListener?.onPredictionResult(predictedLetter)
-            }
-        }
-    }
-
-    private fun prepareInputFeatures(handLandmarksList: List<List<com.google.mediapipe.tasks.components.containers.NormalizedLandmark>>): Array<FloatArray> {
-        // Initialize array for input features
-        val inputFeatures = Array(1) { FloatArray(84) } // Assuming model expects 84 features (21 landmarks * 2 coordinates * 2 hands)
-
-        // Fill with zeros initially
-        inputFeatures[0].fill(0.0f)
-
-        if (handLandmarksList.isNotEmpty()) {
-            // Process first hand
-            val firstHandLandmarks = handLandmarksList[0]
-
-            // Find min x and y for normalization (similar to Python code)
-            var minX = 1.0f
-            var minY = 1.0f
-
-            for (landmark in firstHandLandmarks) {
-                minX = min(minX, landmark.x())
-                minY = min(minY, landmark.y())
+        /** Loads both models. Throws [IllegalStateException] with a readable message on failure. */
+        fun create(context: Context): HandTrackingAnalyzer {
+            val model = try {
+                context.assets.open(MODEL_ASSET).use { RandomForestModel.load(it) }
+            } catch (e: Exception) {
+                throw IllegalStateException("Could not load $MODEL_ASSET: ${e.message}", e)
             }
 
-            // Fill in normalized coordinates
-            for (i in firstHandLandmarks.indices) {
-                val landmark = firstHandLandmarks[i]
-                inputFeatures[0][i * 2] = landmark.x() - minX
-                inputFeatures[0][i * 2 + 1] = landmark.y() - minY
+            val landmarker = try {
+                val options = HandLandmarker.HandLandmarkerOptions.builder()
+                    .setBaseOptions(BaseOptions.builder().setModelAssetPath(LANDMARKER_ASSET).build())
+                    .setNumHands(1) // the model was trained on a single hand (42 features)
+                    .setMinHandDetectionConfidence(0.5f)
+                    .setMinHandPresenceConfidence(0.5f)
+                    .setMinTrackingConfidence(0.5f)
+                    .setRunningMode(RunningMode.VIDEO)
+                    .build()
+                HandLandmarker.createFromOptions(context, options)
+            } catch (e: Exception) {
+                throw IllegalStateException(
+                    "Could not load $LANDMARKER_ASSET (${e.message}). " +
+                        "It is downloaded by the Gradle build - rebuild with an internet connection.", e
+                )
             }
-
-            // Process second hand if present
-            if (handLandmarksList.size > 1) {
-                val secondHandLandmarks = handLandmarksList[1]
-
-                // Find min x and y for second hand
-                minX = 1.0f
-                minY = 1.0f
-
-                for (landmark in secondHandLandmarks) {
-                    minX = min(minX, landmark.x())
-                    minY = min(minY, landmark.y())
-                }
-
-                // Fill in normalized coordinates for second hand
-                for (i in secondHandLandmarks.indices) {
-                    val landmark = secondHandLandmarks[i]
-                    inputFeatures[0][42 + i * 2] = landmark.x() - minX
-                    inputFeatures[0][42 + i * 2 + 1] = landmark.y() - minY
-                }
-            }
+            return HandTrackingAnalyzer(model, landmarker)
         }
-
-        return inputFeatures
-    }
-
-    fun close() {
-        tflite?.close()
-        handLandmarker?.close()
     }
 }

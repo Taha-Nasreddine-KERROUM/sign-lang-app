@@ -1,38 +1,61 @@
 package com.example.signlanguagetranslatorapp
 
+import android.graphics.Bitmap
+import android.graphics.Matrix
+import android.os.SystemClock
+import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import java.util.concurrent.Executors
 
+/**
+ * CameraX analyzer: converts each frame into an upright bitmap and hands it to the tracker.
+ *
+ * Runs on the executor given to ImageAnalysis.setAnalyzer (a single thread), so the tracker
+ * is never called concurrently. [onResult] is invoked on that same thread.
+ *
+ * Important: the frame must be rotated by imageInfo.rotationDegrees, otherwise MediaPipe sees
+ * a sideways hand (the old code skipped this). It is deliberately NOT mirrored for the front
+ * camera: the training images were raw, un-mirrored webcam frames.
+ */
 class SignLanguageImageAnalyzer(
-    private val handTrackingAnalyzer: HandTrackingAnalyzer
+    private val tracker: HandTrackingAnalyzer,
+    private val onResult: (HandTrackingAnalyzer.Prediction?) -> Unit,
+    /** Frames are skipped while this returns false (e.g. the search page is showing). */
+    private val isActive: () -> Boolean = { true },
 ) : ImageAnalysis.Analyzer {
 
-    private val executor = Executors.newSingleThreadExecutor()
-    private var lastAnalyzedTimestamp = 0L
-    private val analysisCooldown = 250L  // Analyze every 0.25 s
+    private var lastAnalyzedMs = 0L
+    private var lastTimestampMs = 0L
 
-    override fun analyze(imageProxy: ImageProxy) {
-        val currentTimestamp = System.currentTimeMillis()
+    override fun analyze(image: ImageProxy) {
+        try {
+            if (!isActive()) return
+            val now = SystemClock.uptimeMillis()
+            if (now - lastAnalyzedMs < MIN_INTERVAL_MS) return
+            lastAnalyzedMs = now
 
-        // Only analyze frames at a reasonable rate to avoid overwhelming the device
-        if (currentTimestamp - lastAnalyzedTimestamp >= analysisCooldown) {
-            imageProxy.use { proxy ->
-              //  val rotationDegrees = proxy.imageInfo.rotationDegrees
+            val timestamp = maxOf(now, lastTimestampMs + 1) // MediaPipe needs strictly increasing timestamps
+            lastTimestampMs = timestamp
 
-                // Convert image to bitmap
-                val bitmap = proxy.toBitmap()
+            val rotation = image.imageInfo.rotationDegrees
+            val bitmap = image.toBitmap()
+            val upright = if (rotation == 0) bitmap else rotate(bitmap, rotation)
 
-                // Process the bitmap in a separate thread to avoid blocking the camera
-                executor.execute {
-                    handTrackingAnalyzer.processImage(bitmap)
-                }
-
-                lastAnalyzedTimestamp = currentTimestamp
-            }
-        } else {
-            imageProxy.close()
+            onResult(tracker.process(upright, timestamp))
+        } catch (e: Exception) {
+            Log.e(TAG, "Frame analysis failed", e)
+        } finally {
+            image.close()
         }
     }
 
+    private fun rotate(source: Bitmap, degrees: Int): Bitmap {
+        val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
+        return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
+    }
+
+    private companion object {
+        const val TAG = "SignAnalyzer"
+        const val MIN_INTERVAL_MS = 80L // ~12 fps is plenty for static letters
+    }
 }
