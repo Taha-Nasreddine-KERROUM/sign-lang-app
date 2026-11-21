@@ -1,0 +1,125 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write # needed only to attach the APK to a GitHub Release on tags
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Finds the folder that contains gradlew, so it works whether the project is at the
+      # repo root or inside a subfolder.
+      - name: Locate Gradle project
+        run: |
+          GRADLEW=$(find . -maxdepth 3 -name gradlew -not -path "./.git/*" | head -n 1)
+          if [ -z "$GRADLEW" ]; then
+            echo "::error::gradlew not found in the repository. Files in repo:"
+            find . -maxdepth 3 -not -path "./.git/*" | head -50
+            exit 1
+          fi
+          DIR=$(dirname "$GRADLEW")
+          echo "Gradle project found in: $DIR"
+          echo "PROJECT_DIR=$DIR" >> "$GITHUB_ENV"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      - name: Set up Gradle (with caching)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-root-directory: ${{ env.PROJECT_DIR }}
+
+      - name: Make gradlew executable
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: chmod +x ./gradlew
+
+      # hand_landmarker.task is downloaded by the Gradle build itself (see app/build.gradle.kts)
+      - name: Build debug APK
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: ./gradlew assembleDebug --stacktrace
+
+      # Next version = highest existing v0.0.N release + 1  ->  v0.0.01, v0.0.02, v0.0.03 ...
+      - name: Compute next version
+        if: github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          LAST=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1000 --json tagName \
+            --jq '[.[] | .tagName | select(test("^v0\\.0\\.[0-9]+$")) | sub("^v0\\.0\\."; "") | tonumber] | (max // 0)')
+          NEXT=$((LAST + 1))
+          VERSION=$(printf "v0.0.%02d" "$NEXT")
+          echo "Next version: $VERSION"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Name the APK
+        run: |
+          mkdir -p dist
+          cp "$PROJECT_DIR/app/build/outputs/apk/debug/app-debug.apk" "dist/SignLanguageTranslator-${VERSION:-${GITHUB_SHA::7}}.apk"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SignLanguageTranslator-apk
+          path: dist/*.apk
+          if-no-files-found: error
+
+      # Manual releases: push a tag like v1.2 and that tag's release gets the APK.
+      - name: Attach APK to GitHub Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.apk
+
+      # Automatic releases: every successful build on main/master creates a NEW release
+      # named v0.0.01, v0.0.02, ... with the APK attached.
+      - name: Publish a new release for this build
+        if: github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ env.VERSION }}
+          generate_release_notes: true
+          make_latest: true
+          files: dist/*.apk
+
+  unit-tests:
+    # Verifies the Kotlin RandomForest gives the same answers as scikit-learn.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Locate Gradle project
+        run: |
+          GRADLEW=$(find . -maxdepth 3 -name gradlew -not -path "./.git/*" | head -n 1)
+          [ -n "$GRADLEW" ] || { echo "::error::gradlew not found"; exit 1; }
+          echo "PROJECT_DIR=$(dirname "$GRADLEW")" >> "$GITHUB_ENV"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          build-root-directory: ${{ env.PROJECT_DIR }}
+      - name: Run unit tests
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: chmod +x ./gradlew && ./gradlew testDebugUnitTest --stacktrace
